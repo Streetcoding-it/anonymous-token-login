@@ -1,0 +1,6 @@
+name: "Anonymous Token Login"
+type: module
+description: "Modulo personalizzato per implementare un login anonimo tramite token digitale. Alla registrazione viene generato un token che l'utente scarica e poi utilizza per autenticarsi."
+core_version_requirement: ^8 || ^9 || ^10 || ^11
+package: Custom
+version: "1.0"

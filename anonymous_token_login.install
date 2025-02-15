@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * Install file per il modulo Anonymous Token Login.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function anonymous_token_login_schema() {
+  $schema['anonymous_token_login'] = [
+    'description' => 'Memorizza il token per il login anonimo degli utenti.',
+    'fields' => [
+      'uid' => [
+        'description' => 'ID dell\'utente.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'token' => [
+        'description' => 'Token univoco generato per il login.',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+    ],
+    'primary key' => ['uid'],
+  ];
+  return $schema;
+}

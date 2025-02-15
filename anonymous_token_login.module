@@ -1,0 +1,74 @@
+<?php
+
+/**
+ * @file
+ * Contiene il codice principale per il modulo Anonymous Token Login.
+ */
+
+/**
+ * Implements hook_user_insert().
+ *
+ * Genera un token univoco alla registrazione e lo salva nella tabella custom.
+ */
+function anonymous_token_login_user_insert(\Drupal\user\UserInterface $account) {
+  // Genera un token univoco.
+  $token = bin2hex(random_bytes(16));
+
+  // Salva il token nella tabella custom.
+  \Drupal::database()->merge('anonymous_token_login')
+    ->key(['uid' => $account->id()])
+    ->fields(['token' => $token])
+    ->execute();
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() per alterare il form di login.
+ */
+function anonymous_token_login_form_user_login_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  // Aggiunge un campo per l'upload del file contenente il token.
+  $form['token_upload'] = [
+    '#type' => 'managed_file',
+    '#title' => t('File del Token'),
+    '#description' => t('Carica il file contenente il token ricevuto durante la registrazione.'),
+    '#upload_location' => 'public://token_uploads/',
+    '#required' => FALSE,
+  ];
+
+  // Aggiunge un validatore personalizzato.
+  $form['#validate'][] = 'anonymous_token_login_user_login_form_validate';
+}
+
+/**
+ * Validatore personalizzato per il form di login.
+ *
+ * Se viene caricato un file token, lo confronta con quello memorizzato per l'utente.
+ */
+function anonymous_token_login_user_login_form_validate(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  $token_file = $form_state->getValue('token_upload');
+  if (!empty($token_file)) {
+    // Carica l'oggetto file.
+    $file = \Drupal\file\Entity\File::load($token_file[0]);
+    if ($file) {
+      // Ottiene il percorso reale del file e ne legge il contenuto.
+      $uri = $file->getFileUri();
+      $real_path = \Drupal::service('file_system')->realpath($uri);
+      $token_content = file_get_contents($real_path);
+
+      // Recupera il nome utente inserito nel form.
+      $name = $form_state->getValue('name');
+      $users = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(['name' => $name]);
+      $account = reset($users);
+      if ($account) {
+        // Carica il token memorizzato per l'utente.
+        $stored = \Drupal::database()->select('anonymous_token_login', 'atl')
+          ->fields('atl', ['token'])
+          ->condition('uid', $account->id())
+          ->execute()
+          ->fetchField();
+        if ($stored && trim($stored) !== trim($token_content)) {
+          $form_state->setErrorByName('token_upload', t('Il token caricato non è valido.'));
+        }
+      }
+    }
+  }
+}

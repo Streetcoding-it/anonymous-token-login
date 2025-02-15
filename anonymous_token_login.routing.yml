@@ -1,0 +1,8 @@
+anonymous_token_login.download:
+  path: '/anonymous-token-download/{uid}'
+  defaults:
+    _controller: '\Drupal\anonymous_token_login\Controller\TokenDownloadController::download'
+    _title: 'Scarica il Token'
+  requirements:
+    _permission: 'access content'
+    uid: \d+
