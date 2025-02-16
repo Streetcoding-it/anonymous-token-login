@@ -80,5 +80,3 @@ Seguendo questi passaggi potrai:
 - Utilizzare il PAT per autenticarti su GitHub.
 
 ---
-
-Salva questo contenuto in un file denominato `istruzioni git.md` e usalo come riferimento per gestire il versioning del tuo progetto tramite Git e GitHub.
